@@ -31,26 +31,26 @@ impl Move {
         }
     }
 
-    fn get_correct_move(opp_move: &Move, desired_state: &MatchState) -> Move {
+    fn get_correct_move(opp_move: &Move, desired_state: &RoundState) -> Move {
         match desired_state {
-            MatchState::Win => opp_move.get_counter(),
-            MatchState::Lose => opp_move.get_loser(),
-            MatchState::Draw => *opp_move,
+            RoundState::Win => opp_move.get_counter(),
+            RoundState::Lose => opp_move.get_loser(),
+            RoundState::Draw => *opp_move,
         }
     }
 }
-enum MatchState {
+enum RoundState {
     Win,
     Lose,
     Draw,
 }
 
-impl MatchState {
-    fn char_to_state(char: &str) -> MatchState {
+impl RoundState {
+    fn char_to_state(char: &str) -> RoundState {
         match char {
-            "X" => MatchState::Lose,
-            "Y" => MatchState::Draw,
-            "Z" => MatchState::Win,
+            "X" => RoundState::Lose,
+            "Y" => RoundState::Draw,
+            "Z" => RoundState::Win,
             _ => unreachable!(),
         }
     }
@@ -68,49 +68,43 @@ impl Round {
         }
 
         match round {
-            &Round(Rock, Paper) => 6,
-            &Round(Paper, Scissors) => 6,
-            &Round(Scissors, Rock) => 6,
+            &Round(Rock, Paper) | &Round(Paper, Scissors) | &Round(Scissors, Rock) => 6,
             _ => 0,
         }
     }
 
-    fn point_for_rounds(&self) -> u32 {
-        let mut total = 0;
-        total += Round::round_condition_points(self);
-
-        total += match self.1 {
-            Move::Rock => 1,
-            Move::Paper => 2,
-            Move::Scissors => 3,
-        };
-
-        return total;
+    fn point_for_round(&self) -> u32 {
+        Round::round_condition_points(self)
+            + match self.1 {
+                Move::Rock => 1,
+                Move::Paper => 2,
+                Move::Scissors => 3,
+            }
     }
 }
 
 fn line_to_round(line: &str) -> Round {
-    let moves: Vec<&str> = line.split(" ").collect();
+    let moves: Vec<&str> = line.split(' ').collect();
 
     let first_move = Move::char_to_move(moves[0]);
-    let desired_state = MatchState::char_to_state(moves[1]);
+    let desired_state = RoundState::char_to_state(moves[1]);
     let second_move = Move::get_correct_move(&first_move, &desired_state);
 
-    return Round(first_move, second_move);
+    Round(first_move, second_move)
 }
 
-// This doesn't work correctly after implementing the second part 
+// This doesn't work correctly after implementing the second part
 // (expected, but idk if it's acceptable)
-pub fn part_1(file: &String) -> u32 {
-    file.split("\n")
+pub fn part_1(file: &str) -> u32 {
+    file.split('\n')
         .map(line_to_round)
-        .map(|round| round.point_for_rounds())
+        .map(|round| round.point_for_round())
         .sum()
 }
 
-pub fn part_2(file: &String) -> u32 {
-    file.split("\n")
+pub fn part_2(file: &str) -> u32 {
+    file.split('\n')
         .map(line_to_round)
-        .map(|round| round.point_for_rounds())
+        .map(|round| round.point_for_round())
         .sum()
 }
