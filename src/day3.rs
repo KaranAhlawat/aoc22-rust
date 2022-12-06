@@ -5,6 +5,39 @@ struct Rucksack {
     common: Vec<char>,
 }
 
+struct Group<'a>(&'a Rucksack, &'a Rucksack, &'a Rucksack);
+
+impl<'a> Group<'a> {
+    fn get_elf_badge(&self) -> char {
+        let first: Vec<&char> = self
+            .0
+            .first_compartment
+            .iter()
+            .chain(self.0.second_compartment.iter())
+            .collect();
+        let second: Vec<&char> = self
+            .1
+            .first_compartment
+            .iter()
+            .chain(self.1.second_compartment.iter())
+            .collect();
+        let third: Vec<&char> = self
+            .2
+            .first_compartment
+            .iter()
+            .chain(self.2.second_compartment.iter())
+            .collect();
+
+        for ch in first {
+            if second.contains(&ch) && third.contains(&ch) {
+                return *ch;
+            }
+        }
+
+        '0'
+    }
+}
+
 impl Rucksack {
     fn get_priority(&self) -> u32 {
         self.common.iter().map(char_to_priority).sum()
@@ -46,5 +79,19 @@ pub fn part_1(file: &str) -> u32 {
 }
 
 pub fn part_2(file: &str) -> u32 {
-    0
+    let sacks = file.split('\n').map(line_to_rucksack).collect::<Vec<_>>();
+
+    let mut groups: Vec<Group> = Vec::new();
+    let mut idx = 0;
+    let total_len = sacks.len();
+    while idx < total_len {
+        groups.push(Group(&sacks[idx], &sacks[idx + 1], &sacks[idx + 2]));
+        idx += 3;
+    }
+
+    groups
+        .iter_mut()
+        .map(|group| group.get_elf_badge())
+        .map(|ch| char_to_priority(&ch))
+        .sum()
 }
